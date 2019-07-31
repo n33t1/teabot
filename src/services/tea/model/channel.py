@@ -4,10 +4,10 @@ from db import db
 from src.services.util.error import OrderExistedError
 
 class ChannelModel(db.Model):
-    __tablename__ = "channels"
+    __tablename__ = "channel"
 
     channel_id = db.Column(db.String(80), primary_key=True)
-    orders = db.relationship('OrderModel', lazy='dynamic')
+    orders = db.relationship('OrderModel', back_populates="channel", lazy='dynamic')
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
