@@ -1,0 +1,3 @@
+# MILK_FOAM = 
+MILK_TEA = "#ECDCC2"
+# BOBA = 
