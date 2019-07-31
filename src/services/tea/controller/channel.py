@@ -24,11 +24,11 @@ class ChannelController:
         try:
             channel = ChannelModel(channel_id)
             channel.save_to_db()
-            return None, channel
+            return channel
         except Exception as e:
             logger.error("Unable to create order for channel  %s.",
                          channel_id, exc_info=True)
-            return e, None
+            raise
 
     @classmethod
     def find_channel(cls, channel_id):

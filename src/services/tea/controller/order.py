@@ -22,20 +22,20 @@ class OrderController:
     def find_active_order(cls, channel_id):
         try:
             active_order = OrderModel.find_active_order(channel_id)
-            return None, active_order.json()
+            return active_order
         except Exception as e:
             logger.error("Unable to find active order for channel %s.", channel_id)
-            return e, None
+            raise
     
     @classmethod
     def create_order(cls, channel_id):
         try:
             order = OrderModel(channel_id)
             order.save_to_db()
-            return None, order.json()
+            return order.json()
         except Exception as e:
             logger.error("Unable to create new order for channel %s.", channel_id, exc_info=True)
-            return e, None
+            raise
     
     @classmethod
     def deactivate_order(cls, channel_id):

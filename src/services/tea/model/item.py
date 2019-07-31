@@ -1,6 +1,6 @@
 from sqlalchemy import exc
 
-from db import db
+from db import db, make_session_scope
 from src.services.util.error import OrderExistedError
 
 class ItemModel(db.Model):
@@ -25,24 +25,9 @@ class ItemModel(db.Model):
         return cls.query.filter_by(name=item_name).first()
 
     def save_to_db(self):
-        try:
+        with make_session_scope(db.session) as session:
             db.session.add(self)
-            db.session.commit()
-        except exc.IntegrityError as e:
-            db.session().rollback()
-            raise OrderExistedError()
-        except Exception as e:
-            db.session().rollback()
-            raise
-        finally:
-            db.session.close()
 
     def delete_from_db(self):
-        try:
-            db.session.delete(self)
-            db.session.commit()
-        except Exception as e:
-            db.session().rollback()
-            raise
-        finally:
-            db.session.close()
+        with make_session_scope(db.session) as session:
+            session.delete(self)
