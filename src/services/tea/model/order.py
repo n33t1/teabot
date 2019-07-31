@@ -25,8 +25,8 @@ class OrderModel(db.Model):
     is_active = db.Column(db.Boolean, unique=False, default=True)
     is_finished = db.Column(db.Boolean, unique=False, default=False)
 
-    channel_id = db.Column(db.String(80), db.ForeignKey('channels.channel_id'))
-    channel = db.relationship('ChannelModel')
+    channel_id = db.Column(db.String(80), db.ForeignKey('channel.channel_id'))
+    channel = db.relationship('ChannelModel', back_populates="orders")
 
     items = db.relationship("ItemModel", secondary="order_user_items")
 
