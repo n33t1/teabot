@@ -62,12 +62,17 @@ class OrderUserItemsModel(db.Model):
             "ice_percentage": self.ice_percentage,
             "sugar_percentage": self.sugar_percentage,
             "note": self.note,
+            "count": self.count,
             "created_at": self.created_at
         }
 
     @classmethod
     def find_user_order_item(cls, order_id, user_id, item_name):
         return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).filter_by(item_name=item_name).first()
+    
+    @classmethod
+    def find_order_items(cls, order_id):
+        return cls.query.filter_by(order_id=order_id).all()
 
     @classmethod
     def update_user_order_item(cls, item, item_info):
@@ -82,7 +87,7 @@ class OrderUserItemsModel(db.Model):
         return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).all()
 
     @classmethod
-    def find_order_items(cls, channel_id):
+    def find_order_items(cls, order_id):
         return cls.query.filter_by(order_id=order_id).all()
 
     def save_to_db(self):

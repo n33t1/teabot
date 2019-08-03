@@ -21,7 +21,9 @@ class Action(Resource):
             trigger_id = message_action["trigger_id"]
 
             if action_name == "channel_configs":
-                pass
+                # TODO: refactor this
+                if callback_id == "1_UESL7NLH5_channel_configs_menu":
+                    action_bot.handle_view_items(channel_id, trigger_id)
             elif action_name == "user_items":
                 action_bot.handle_edit_items(user_id, channel_id, action_value, trigger_id)
 

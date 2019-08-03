@@ -62,14 +62,10 @@ class ItemController:
     def add_item(cls, order_id, user_id, item_info):
         try:
             item_name = item_info["flavor"]
-            item = cls.query_user_order_item(order_id, user_id, item_name)
-            if item:
-                raise ItemExistedError
-            else:
-                item = cls._add_item(item_name)
-                order_user_item = OrderUserItemsModel(order_id, user_id, item_info)
-                order_user_item.save_to_db()
-                return order_user_item.json()
+            item = cls._add_item(item_name)
+            order_user_item = OrderUserItemsModel(order_id, user_id, item_info)
+            order_user_item.save_to_db()
+            return order_user_item.json()
         except Exception as e:
             logger.error("Unable to add item %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
             raise
