@@ -1,3 +1,4 @@
+from datetime import datetime
 
 from config import slack_client
 
@@ -26,6 +27,10 @@ class EventController:
 
         # TODO: for test purpose only
         order_id = previous_order.id
+        # error, new_order = self.start_order(channel_id, user_id, resturant, timeout_at)
+        # print("new order: ", new_order)
+
+        # order_id = new_order.id
         self.slack_client.api_call("chat.postEphemeral",
                                     channel=channel_id,
                                     user=user_id,
@@ -46,7 +51,9 @@ class EventController:
         #                                text=Message.get_previous_order_message(previous_order))
         # else:
         #     # start a new order
-        #     new_order = self.start_order(channel_id)
+        #     # TODO: remove hardcoded value here
+        #     user_id, resturant, timeout_at = user_id, "Yifang", datetime.now()
+        #     new_order = self.start_order(channel_id, user_id, resturant, timeout_at)
         #     order_id = new_order.id
 
         #     self.slack_client.api_call("chat.postEphemeral",
@@ -73,6 +80,14 @@ class EventController:
                          channel_id, exc_info=True)
             raise
 
+    def _parse_order_info(self, msg):
+        # parse
+        # "@teabot start a new order from Yifang. Close order in 3 hours."
+        # "@teabot start a new order from Yifang. Close order @ 4:30."
+
+        # You might need to use users.info(https://api.slack.com/methods/users.info) in order to get user timezone
+        pass 
+
     def find_previous_order(self, channel_id):
         try:
             _ = self.__find_or_create_channel(channel_id)
@@ -82,13 +97,13 @@ class EventController:
                          channel_id, exc_info=True)
             return e, None
 
-    def start_order(self, channel_id):
+    def start_order(self, channel_id, user_id, resturant, timeout_at):
         try:
             active_order = OrderController.find_active_order(channel_id)
             if active_order:
                 raise OrderExistedError
             else:
-                order = OrderController.create_order(channel_id)
+                order = OrderController.create_order(channel_id, user_id, resturant, timeout_at)
                 return None, order
         except Exception as e:
             return e, None

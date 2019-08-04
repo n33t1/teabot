@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 
 from .menu import Menu
 from .dialog import Dialog
@@ -99,12 +100,11 @@ class Message:
 
     @classmethod
     def get_channel_order_result(cls, order_info, items):
-        print("order_info: ", order_info)
-        result = [Section(Markdown("*Ordering from {}!* Started by <fakeLink.toUser.com|Mark>".format("Yifang")).json()).json()]
+        result = [Section(Markdown("*Ordering from {}! Place your order before {}* Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
         item_name_to_details = defaultdict(lambda: defaultdict(list))
         item_name_to_count = defaultdict(lambda: 0)
         for item in items:
-            item_name_to_count[item["item_name"]] += 1
+            item_name_to_count[item["item_name"]] += item["count"]
             item_name_to_details[item["item_name"]][(item["ice_percentage"], item["sugar_percentage"], item["topping"])] = [item["user_id"], item["note"]]
         
         for item_name, item_to_user_info in item_name_to_details.items():

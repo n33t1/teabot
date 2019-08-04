@@ -38,9 +38,9 @@ class OrderController:
             raise
     
     @classmethod
-    def create_order(cls, channel_id):
+    def create_order(cls, channel_id, user_id, resturant, timeout_at):
         try:
-            order = OrderModel(channel_id)
+            order = OrderModel(channel_id, user_id, resturant, timeout_at)
             order.save_to_db()
             return order.json()
         except Exception as e:

@@ -25,13 +25,21 @@ class OrderModel(db.Model):
     is_active = db.Column(db.Boolean, unique=False, default=True)
     is_finished = db.Column(db.Boolean, unique=False, default=False)
 
+    by_user = db.Column(db.String(80), nullable=False)
+    from_resturant = db.Column(db.String(80), nullable=False)
+    timeout_at = db.Column(db.DateTime, nullable=False)
+
+
     channel_id = db.Column(db.String(80), db.ForeignKey('channel.channel_id'))
     channel = db.relationship('ChannelModel', back_populates="orders")
 
     items = db.relationship("ItemModel", secondary="order_user_items")
 
-    def __init__(self, channel_id):
+    def __init__(self, channel_id, user_id, resturant, timeout_at):
         self.channel_id = channel_id
+        self.by_user = user_id
+        self.from_resturant = resturant
+        self.timeout_at = timeout_at
 
     def __repr__(self):
         return "<Order ('{}', channel_id: '{}')>" .format(self.id, self.channel_id)
@@ -43,7 +51,10 @@ class OrderModel(db.Model):
             "is_finished": self.is_finished,
             "created_at": self.created_at,
             "finished_at": self.finished_at,
-            "channel_id": self.channel_id
+            "channel_id": self.channel_id,
+            "by_user": self.by_user,
+            "from_resturant": self.from_resturant,
+            "timeout_at": self.timeout_at
         }
 
     @classmethod
