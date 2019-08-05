@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from src.services.tea.model.order import OrderModel
+from src.services.tea.model.order_user_items import OrderUserItemsModel 
 
 import logging
 
@@ -19,6 +20,15 @@ class OrderController:
         return OrderController.__instance
     
     @classmethod
+    def find_order_items(cls, channel_id):
+        try:
+            items = OrderUserItemsModel.find_order_items(channel_id)
+            return [item.json() for item in items] if items else []
+        except Exception as e:
+            logger.error("Unable to find items for channel %s.", channel_id)
+            raise
+
+    @classmethod
     def find_active_order(cls, channel_id):
         try:
             active_order = OrderModel.find_active_order(channel_id)
@@ -28,9 +38,9 @@ class OrderController:
             raise
     
     @classmethod
-    def create_order(cls, channel_id):
+    def create_order(cls, channel_id, user_id, resturant, timeout_at):
         try:
-            order = OrderModel(channel_id)
+            order = OrderModel(channel_id, user_id, resturant, timeout_at)
             order.save_to_db()
             return order.json()
         except Exception as e:

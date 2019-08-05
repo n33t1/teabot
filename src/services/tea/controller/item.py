@@ -1,6 +1,8 @@
 from src.services.tea.model.order_user_items import OrderUserItemsModel
 from src.services.tea.model.item import ItemModel
 
+from ...util.error import ItemExistedError
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,13 +29,13 @@ class ItemController:
             return e, None
     
     @classmethod
-    def query_user_order_item(cls, order_id, user_id, item_name):
+    def query_user_order_item(cls, order_id, user_id, item_id):
         try:
-            items = OrderUserItemsModel.find_user_order_item(order_id, user_id, item_name)
-            return None, items.json()
+            items = OrderUserItemsModel.find_user_order_item(order_id, user_id, item_id)
+            return items
         except Exception as e:
-            logger.error("Unable to find item %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
-            return e, None
+            logger.error("Unable to find item %s for user %s with order %s.", item_id, user_id, order_id, exc_info=True)
+            raise
     
     @classmethod
     def _add_item(cls, item_name):
@@ -60,17 +62,13 @@ class ItemController:
     def add_item(cls, order_id, user_id, item_info):
         try:
             item_name = item_info["flavor"]
-            item = cls.query_user_order_item(order_id, user_id, item_name)
-            if item:
-                raise ItemExistedError
-            else:
-                item = cls._add_item(item_name)
-                order_user_item = OrderUserItemsModel(order_id, user_id, item_info)
-                order_user_item.save_to_db()
-                return None, order_user_item.json()
+            item = cls._add_item(item_name)
+            order_user_item = OrderUserItemsModel(order_id, user_id, item_info)
+            order_user_item.save_to_db()
+            return order_user_item.json()
         except Exception as e:
             logger.error("Unable to add item %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
-            return e, None
+            raise
 
     @classmethod
     def delete_item(cls, order_id, user_id, item_name):

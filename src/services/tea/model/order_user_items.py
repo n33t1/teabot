@@ -40,7 +40,6 @@ class OrderUserItemsModel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, order_id, user_id, item_info):
-        print("item_info: ", item_info)
         self.order_id = order_id
         self.user_id = user_id
         self.item_name = item_info["flavor"]
@@ -55,6 +54,7 @@ class OrderUserItemsModel(db.Model):
 
     def json(self):
         return {
+            "id": self.id,
             "order_id": self.order_id,
             "user_id": self.user_id,
             "item_name": self.item_name,
@@ -62,12 +62,17 @@ class OrderUserItemsModel(db.Model):
             "ice_percentage": self.ice_percentage,
             "sugar_percentage": self.sugar_percentage,
             "note": self.note,
+            "count": self.count,
             "created_at": self.created_at
         }
 
     @classmethod
-    def find_user_order_item(cls, order_id, user_id, item_name):
-        return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).filter_by(item_name=item_name).first()
+    def find_user_order_item(cls, order_id, user_id, item_id):
+        return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).filter_by(id=item_id).first()
+    
+    @classmethod
+    def find_order_items(cls, order_id):
+        return cls.query.filter_by(order_id=order_id).all()
 
     @classmethod
     def update_user_order_item(cls, item, item_info):
@@ -82,7 +87,7 @@ class OrderUserItemsModel(db.Model):
         return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).all()
 
     @classmethod
-    def find_order_items(cls, channel_id):
+    def find_order_items(cls, order_id):
         return cls.query.filter_by(order_id=order_id).all()
 
     def save_to_db(self):

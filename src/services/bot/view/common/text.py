@@ -7,3 +7,5 @@ class Text:
             self.value = kwargs.get("value")
         if "subtype" in kwargs:
             self.subtype = kwargs.get("subtype")
+        if "placeholder" in kwargs:
+            self.placeholder = kwargs.get("placeholder")
