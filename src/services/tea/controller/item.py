@@ -29,12 +29,12 @@ class ItemController:
             return e, None
     
     @classmethod
-    def query_user_order_item(cls, order_id, user_id, item_name):
+    def query_user_order_item(cls, order_id, user_id, item_id):
         try:
-            items = OrderUserItemsModel.find_user_order_item(order_id, user_id, item_name)
+            items = OrderUserItemsModel.find_user_order_item(order_id, user_id, item_id)
             return items
         except Exception as e:
-            logger.error("Unable to find item %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
+            logger.error("Unable to find item %s for user %s with order %s.", item_id, user_id, order_id, exc_info=True)
             raise
     
     @classmethod
