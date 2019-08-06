@@ -26,7 +26,7 @@ class Ordertime:
             return None
 
     @classmethod
-    def parse_time(cls, string, tzstring="America/New_York"):
+    def parse_time(cls, string, tzstring):
         input_time = cls._parse24h(string) or cls._parse12h(string) or cls._parse12h_ampm(string)
         if not input_time:
             raise ValueError("Unrecognized date format {}, accept format is 'hh:mm [am/pm]'".format(string))
@@ -35,7 +35,7 @@ class Ordertime:
         return timezone.localize(result_dttm_naive)
 
     @classmethod
-    def parse_interval(cls, amount, unit, tzstring="America/New_York"):
+    def parse_interval(cls, amount, unit, tzstring):
         amount = int(amount)
         time_now = datetime.now()
         delta = None
