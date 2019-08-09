@@ -26,8 +26,15 @@ class Ordertime:
             return None
 
     @classmethod
+    def _parse12h_nomin(cls, string):
+        try:
+            return datetime.strptime(string, "%H %p").time()
+        except ValueError:
+            return None
+
+    @classmethod
     def parse_time(cls, string, tzstring):
-        input_time = cls._parse24h(string) or cls._parse12h(string) or cls._parse12h_ampm(string)
+        input_time = cls._parse24h(string) or cls._parse12h(string) or cls._parse12h_ampm(string) or cls._parse12h_nomin(string)
         if not input_time:
             raise ValueError("Unrecognized date format {}, accept format is 'hh:mm [am/pm]'".format(string))
         result_dttm_naive = datetime.combine(date.today(), input_time)
