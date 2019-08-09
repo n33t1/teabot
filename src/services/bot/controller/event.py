@@ -7,8 +7,10 @@ from src.services.tea.controller.order import OrderController
 
 from ..view.message import Message
 from ...util.error import OrderExistedError
+from ...util.ordertime import Ordertime
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
@@ -86,7 +88,52 @@ class EventController:
         # "@teabot start a new order from Yifang. Close order @ 4:30."
 
         # You might need to use users.info(https://api.slack.com/methods/users.info) in order to get user timezone
-        pass 
+        """Parse Order strings to a location name and a due time (as datetime object)
+        Location name is matched by "*FROM_[Alphanumeric Location Name][.,;]_close*" where underscore is a space.
+            A separator (one of [.,;]) is needed after the location name so that names with space can be matched.
+            "close" is used to identify the next sentence, it can be changed.
+
+        This method will attempt to parse order due time through two ways, interval and time, with the help
+            of util.Ordertime class.
+
+        Interval ("in 3 hours", "in 45 mins") is matched by "CLOSE_ORDER_IN_[num]_[unit]"
+            Unit is one of '[h]our(s), [m]inute(s), [s]econd(s)', 'min(s)' and'sec(s)' are also matched.
+
+        Time ("@ 2:45pm", "at 15:00") is matched by "CLOSE_[ORDER_]['@' or 'at']_[h:mm (am/pm)]".
+            "order" is now optional.
+            Current implementation will interpret "...at 3:00" as 3am. 24-hour time will be parsed correctly.
+            Current implementation does not allow "...at 3".
+            Current implementation does allow "...at 3:00 am/pm".
+            strptime procided by datetime package does not have regex.
+
+        Timezone information is obtained by calling slack API client on the user ID. Since the parameter format
+            is yet to be determined, an extra field might be needed if @msg is just the order string.
+        Timezone information defaults to Eastern Time of United States ('America/New_York').
+
+        :param msg: Order string to pass in; OR IN CASE OF Event object Extra Preprocessing is required.
+        :return: location String, due_dttm datetime object
+        """
+        location_pattern = re.compile(r".*from\s(?P<loc>[a-zA-Z0-9\s]+)[,.;]?\sclose.*", re.I)
+        location = location_pattern.match(msg)['loc'].strip()
+
+        interval_pattern = re.compile(r".*close\s(order\s?)?in\s(?P<amt>[0-9]+)\s?(?P<unit>[a-zA-Z]+s?)", re.I)
+        time_pattern = re.compile(r".*close\s(order\s?)?((at)|@)\s(?P<time>[0-9:]+\s([a|p]m)?)", re.I)
+        interval_match = interval_pattern.match(msg)
+        time_match = time_pattern.match(msg)
+
+        # Where will the user_id come from?
+        user_id = None
+        user_info = self.slack_client.api_call('users.info', user=user_id).get('user', None)
+        user_tz = user_info.get('tz', 'America/New_York') if user_info else 'America/New_York'
+
+        due_dttm = None
+        if interval_match:
+            due_dttm = Ordertime.parse_interval(interval_match['amt'], interval_match['unit'], user_tz)
+        elif time_match:
+            due_dttm = Ordertime.parse_time(time_match['time'], user_tz)
+
+        return location, due_dttm
+
 
     def find_previous_order(self, channel_id):
         try:
