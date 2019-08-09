@@ -42,7 +42,7 @@ class OrderController:
         try:
             order = OrderModel(channel_id, user_id, resturant, timeout_at)
             order.save_to_db()
-            return order.json()
+            return order
         except Exception as e:
             logger.error("Unable to create new order for channel %s.", channel_id, exc_info=True)
             raise
