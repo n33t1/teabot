@@ -26,7 +26,18 @@ class EventController:
             "user"], slack_event["event"]["text"]
 
         error, previous_order = self.find_previous_order(channel_id)
-        print("error, previous_order: ", error, previous_order)
+        # print("error, previous_order: ", error, previous_order)
+        # order_id = previous_order.id
+        # self.slack_client.api_call("chat.postEphemeral",
+        #                             channel=channel_id,
+        #                             user=user_id,
+        #                             attachments=Message.get_channel_configs_menu(order_id, user_id))
+        
+        # self.slack_client.api_call("chat.postMessage",
+        #                         channel=channel_id,
+        #                         text=Message.get_new_order_message(
+        #                             previous_order),
+        #                         attachments=Message.get_user_items_menu(order_id, user_id))
 
         if previous_order:
             # previous order did not finish

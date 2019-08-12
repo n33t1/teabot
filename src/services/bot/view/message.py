@@ -24,8 +24,8 @@ class Message:
 
     @classmethod
     def get_new_order_message(cls, new_order):
-        print("new_order: ", new_order)
-        return "//TODO: some message here; fix text subtype check"
+        order_info = new_order.json()
+        return "*Ordering from {}! Place your order before {}* Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])
 
     @classmethod
     def get_user_items_menu(cls, order_id, user_id):
@@ -34,7 +34,8 @@ class Message:
             "Edit, view or delete your items for current order",
             "{}_{}_user_items_menu".format(order_id, user_id),
             [
-                Button("user_items", "Add Item", "edit"),
+                Button("user_items", "Add Item", "add"),
+                Button("user_items", "View Items", "view"),
                 Button("user_items", "Cancel Items", "cancel",
                        style="danger",
                        confirm=Confirm(
@@ -53,24 +54,7 @@ class Message:
             [
                 Button("channel_configs", "Edit Order", "edit"),
                 Button("channel_configs", "View Summary", "view"),
-                Button("channel_configs", "Cancel Order", "cancel",
-                       style="danger",
-                       confirm=Confirm(
-                           "Are you sure?", "The order will be cancelled. Everyone's items will be gone :(")
-                       )
-            ]
-        )
-        return [menu.json()]
-
-    @classmethod
-    def get_channel_order_summary(cls, order_id, user_id):
-        menu = Menu(
-            BOBA,
-            "Edit order configuration for everyone in the channel. Add order description, location, last call time and more!",
-            "{}_{}_channel_configs_menu".format(order_id, user_id),
-            [
-                Button("channel_configs", "Edit Order", "edit"),
-                Button("channel_configs", "View Summary", "view"),
+                Button("channel_configs", "Finish Order", "finish"),
                 Button("channel_configs", "Cancel Order", "cancel",
                        style="danger",
                        confirm=Confirm(
@@ -123,7 +107,7 @@ class Message:
         if item:
             dialog = Dialog(
                 "Edit your items",
-                "{}_{}_user_items_edit".format(order_id, user_id),
+                "{}_{}_user_items_update_{}".format(order_id, user_id, item["id"]),
                 [
                     Text("Flavor", "flavor", value = item["item_name"]),
                     Text("Topping", "topping", value = item["topping"]),
@@ -161,7 +145,7 @@ class Message:
         else:
             dialog = Dialog(
                 "Edit your items",
-                "{}_{}_user_items_edit".format(order_id, user_id),
+                "{}_{}_user_items_add".format(order_id, user_id),
                 [
                     Text("Flavor", "flavor"),
                     Text("Topping", "topping"),
