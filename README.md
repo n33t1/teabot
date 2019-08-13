@@ -1,5 +1,5 @@
 # teabot
-A slack bot to order boba tea and more!
+A slack bot who also likes (ordering) boba tea just like you!
 
 ![teabot_preview](https://user-images.githubusercontent.com/17972401/62922089-6a089180-bd5f-11e9-9afe-8bff7420687b.png)
 
