@@ -73,9 +73,8 @@ class ActionController:
 
     def handle_finish_order(self, channel_id, user_id, order, response_url):
         error, order = OrderController.finish_order(channel_id)
-        print("error, order: ", error, order)
         self.handle_view_summary(channel_id, user_id, order, response_url, is_user_summary=False, is_finshed_summary=True)
-        # error handling here
+        # TODO: error handling here
 
     def handle_view_summary(self, channel_id, user_id, order, response_url, is_user_summary=False, is_finshed_summary=False):
         if is_user_summary:

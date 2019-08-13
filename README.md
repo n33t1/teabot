@@ -1,6 +1,10 @@
 # teabot
 A slack bot to order boba tea and more!
 
+![teabot_preview](https://user-images.githubusercontent.com/17972401/62922089-6a089180-bd5f-11e9-9afe-8bff7420687b.png)
+
+Icon used in the preview above is made by [Freepik](https://www.flaticon.com/authors/freepik) from www.flaticon.com under [Flaticon Basic License](https://file000.flaticon.com/downloads/license/license.pdf).
+
 ## Installation
 ```bash
 mkvirtualenv oit --python=python3.7 # if virtual environment has not been created
