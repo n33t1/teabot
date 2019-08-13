@@ -137,7 +137,7 @@ class Message:
     def get_user_items_edit_dialog(cls, order_id, user_id, item=None):
         if item:
             dialog = Dialog(
-                "Edit your items",
+                "Edit Your Item",
                 "{}_{}_user_items_update_{}".format(order_id, user_id, item["id"]),
                 [
                     Text("Flavor", "flavor", value = item["item_name"]),
@@ -175,7 +175,7 @@ class Message:
             )
         else:
             dialog = Dialog(
-                "Edit your items",
+                "Add New Item",
                 "{}_{}_user_items_add".format(order_id, user_id),
                 [
                     Text("Flavor", "flavor"),

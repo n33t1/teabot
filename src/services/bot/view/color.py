@@ -1,3 +1,3 @@
-# MILK_FOAM = 
+# MILK_FOAM = #dbcbb0
 MILK_TEA = "#ECDCC2"
 BOBA = "#46423A"
