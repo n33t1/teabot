@@ -19,13 +19,12 @@ class Message:
 
     @classmethod
     def get_previous_order_message(cls, previous_order):
-        print("previous_order: ", previous_order)
         return "Previous order exist!"
 
     @classmethod
     def get_new_order_message(cls, new_order):
-        print("new_order: ", new_order)
-        return "//TODO: some message here; fix text subtype check"
+        order_info = new_order.json()
+        return "*Ordering from {}! Place your order before {}* Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])
 
     @classmethod
     def get_user_items_menu(cls, order_id, user_id):
@@ -34,7 +33,8 @@ class Message:
             "Edit, view or delete your items for current order",
             "{}_{}_user_items_menu".format(order_id, user_id),
             [
-                Button("user_items", "Add Item", "edit"),
+                Button("user_items", "Add Item", "add"),
+                Button("user_items", "View Items", "view"),
                 Button("user_items", "Cancel Items", "cancel",
                        style="danger",
                        confirm=Confirm(
@@ -53,6 +53,7 @@ class Message:
             [
                 Button("channel_configs", "Edit Order", "edit"),
                 Button("channel_configs", "View Summary", "view"),
+                Button("channel_configs", "Finish Order", "finish"),
                 Button("channel_configs", "Cancel Order", "cancel",
                        style="danger",
                        confirm=Confirm(
@@ -62,68 +63,82 @@ class Message:
         )
         return [menu.json()]
 
-    @classmethod
-    def get_channel_order_summary(cls, order_id, user_id):
-        menu = Menu(
-            BOBA,
-            "Edit order configuration for everyone in the channel. Add order description, location, last call time and more!",
-            "{}_{}_channel_configs_menu".format(order_id, user_id),
-            [
-                Button("channel_configs", "Edit Order", "edit"),
-                Button("channel_configs", "View Summary", "view"),
-                Button("channel_configs", "Cancel Order", "cancel",
-                       style="danger",
-                       confirm=Confirm(
-                           "Are you sure?", "The order will be cancelled. Everyone's items will be gone :(")
-                       )
-            ]
-        )
-        return [menu.json()]
+
+# @classmethod
+    # def get_drink_details(cls, item_name, item_to_users_info, count, order_id):
+    #     result = ["*{}*".format(item_name)]
+
+    #     for (ice, sugar, topping), users_info in item_to_users_info.items():
+    #         item_count = 0
+    #         notes = []
+    #         for (uid, note, item_id, count) in users_info:
+    #             item_count += count
+    #             notes.append("<@{}>: \"{}\"\n".format(uid, note))
+    #             delete_button_value = "delete_{}_{}_{}".format(order_id, uid, item_id)
+    #         a = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping, item_count)
+            
+    #     # for (i, ((ice, sugar, topping), (uid, note, button_msg, count))) in enumerate(user_items):
+    #     #     total_count =
+    #     #     a = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping)
+    #     #     # if not note:
+    #     #     #     plain_users.append(Markdown("<@{}>".format(uid)).json())
+    #     #     # else:
+    #     #     elements = "<@{}>: \"{}\"".format(uid, note)
+    #     # # result.append(Context(plain_users).json())
+    #     # return result
 
     @classmethod
-    def get_drink_details(cls, item_name, item_to_user_info, count):
+    def get_drink_details(cls, item_name, item_to_user_info, count, order_id, is_user_summary):
         user_items = list(item_to_user_info.items())
-        result = [Section(Markdown("*{}* ({})\n{}% ice, {}% sugar with {}".format(item_name, count, user_items[0][0][0], user_items[0][0][1], user_items[0][0][2])).json(), accessory=Accessory(str(user_items[0][1][2])).json()).json()]
-        plain_users = []
-        for (i, ((ice, sugar, topping), (uid, note, button_msg))) in enumerate(user_items):
-            if i != 0:
-                result.append(Section(Markdown(
-                    "{}% ice, {}% sugar with {}".format(ice, sugar, topping)).json(), accessory=Accessory(str(button_msg)).json()).json())
-            # if not note:
-            #     plain_users.append(Markdown("<@{}>".format(uid)).json())
-            # else:
-            elements = [Markdown("<@{}>: \"{}\"".format(uid, note)).json()]
-            result.append(Context(elements).json())
-            # user_pictures = [Image("https://api.slack.com/img/blocks/bkb_template_images/profile_1.png", "Michael Scott").json()]
-            # user_details = [Markdown("\"Thanks!\"").json()]
-        # result.append(Context(plain_users).json())
+        result = []
+        for (i, ((ice, sugar, topping), users_info)) in enumerate(user_items):
+            
+            item_count = 0
+            notes = []
+            for (uid, note, item_id, count) in users_info:
+                item_count += count
+                notes.append(Markdown("<@{}>: \"{}\"".format(uid, note)).json())
+            
+            if i == 0:
+                item_detail = "*{}* ({})\n{}% ice, {}% sugar with {} ({})".format(item_name, count, ice, sugar, topping, item_count) 
+            else:
+                item_detail = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping, item_count)
+            
+            if is_user_summary:
+                result.append(Section(Markdown(item_detail).json(), accessory=Accessory(str(item_id)).json()).json())
+            else:
+                result.append(Section(Markdown(item_detail).json()).json())
+            
+            result.append(Context(notes).json())
         return result
 
     @classmethod
-    def get_channel_order_result(cls, order_info, items, is_user_summary=False):
+    def get_channel_order_result(cls, order_info, items, is_user_summary, is_finshed_summary=False):
         if is_user_summary:
-            result = [
-                Section(Markdown("*Here is your order summary!*").json()).json()]
+            result = [Section(Markdown(":rotating_light:*Ordering from {}!:rotating_light: Place your order before {}*:stopwatch::writing_hand: Started by <@{}>\n*Here is your order summary!*".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
         else:
-            result = [Section(Markdown("*Ordering from {}! Place your order before {}* Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
+            if is_finshed_summary:
+                result = [Section(Markdown("*Order from {}!* Started by <@{}>".format(order_info["from_resturant"], order_info["by_user"])).json()).json()]
+            else:
+                result = [Section(Markdown(":rotating_light:*Ordering from {}!:rotating_light: Place your order before {}*:stopwatch::writing_hand: Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
         item_name_to_details = defaultdict(lambda: defaultdict(list))
         item_name_to_count = defaultdict(lambda: 0)
         for item in items:
             item_name_to_count[item["item_name"]] += item["count"]
             item_name_to_details[item["item_name"]][(
-                item["ice_percentage"], item["sugar_percentage"], item["topping"])] = [item["user_id"], item["note"], item["id"]]
+                item["ice_percentage"], item["sugar_percentage"], item["topping"])].append([item["user_id"], item["note"], item["id"], item["count"]])
 
-        for item_name, item_to_user_info in item_name_to_details.items():
+        for item_name, item_to_users_info in item_name_to_details.items():
             result += cls.get_drink_details(item_name,
-                                            item_to_user_info, item_name_to_count[item_name])
+                                            item_to_users_info, item_name_to_count[item_name], order_info["id"], is_user_summary)
         return result
 
     @classmethod
     def get_user_items_edit_dialog(cls, order_id, user_id, item=None):
         if item:
             dialog = Dialog(
-                "Edit your items",
-                "{}_{}_user_items_edit".format(order_id, user_id),
+                "Edit Your Item",
+                "{}_{}_user_items_update_{}".format(order_id, user_id, item["id"]),
                 [
                     Text("Flavor", "flavor", value = item["item_name"]),
                     Text("Topping", "topping", value = item["topping"]),
@@ -160,8 +175,8 @@ class Message:
             )
         else:
             dialog = Dialog(
-                "Edit your items",
-                "{}_{}_user_items_edit".format(order_id, user_id),
+                "Add New Item",
+                "{}_{}_user_items_add".format(order_id, user_id),
                 [
                     Text("Flavor", "flavor"),
                     Text("Topping", "topping"),

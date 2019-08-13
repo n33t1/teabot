@@ -23,7 +23,7 @@ class ItemController:
     def query_user_items(cls, order_id, user_id):
         try:
             items = OrderUserItemsModel.find_user_items(order_id, user_id)
-            return None, items
+            return None, [item.json() for item in items]
         except Exception as e:
             logger.error("Unable to query items for user %s with order %s.", user_id, order_id, exc_info=True)
             return e, None
@@ -31,7 +31,7 @@ class ItemController:
     @classmethod
     def query_user_order_item(cls, order_id, user_id, item_id):
         try:
-            items = OrderUserItemsModel.find_user_order_item(order_id, user_id, item_id)
+            items = OrderUserItemsModel.find_user_order_item_id(order_id, user_id, item_id)
             return items
         except Exception as e:
             logger.error("Unable to find item %s for user %s with order %s.", item_id, user_id, order_id, exc_info=True)
@@ -59,7 +59,7 @@ class ItemController:
             raise
 
     @classmethod
-    def add_item(cls, order_id, user_id, item_info):
+    def add_order_item(cls, order_id, user_id, item_info):
         try:
             item_name = item_info["flavor"]
             item = cls._add_item(item_name)
@@ -71,27 +71,33 @@ class ItemController:
             raise
 
     @classmethod
-    def delete_item(cls, order_id, user_id, item_name):
+    def delete_items(cls, order_id, user_id):
         try:
-            item = cls._find_item(item_name)
-            order_user_item = OrderUserItemsModel.find_user_order_item(order_id, user_id, item.name)
+            # TODO: check if items exist 
+            order_user = OrderUserItemsModel.find_user_order(order_id, user_id)
+            order_user.delete_from_db()
+            return None, True
+        except Exception as e:
+            logger.error("Unable to delete items for user %s with order %s.",user_id, order_id, exc_info=True)
+            return e, None 
+
+    @classmethod
+    def delete_item(cls, order_id, user_id, item_info):
+        try:
+            order_user_item = OrderUserItemsModel.find_user_order_item_details(order_id, user_id, item_info)
             order_user_item.delete_from_db()
             return None, True
         except Exception as e:
-            logger.error("Unable to delete item %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
+            logger.error("Unable to delete item %s for user %s with order %s.", item_info["id"], user_id, order_id, exc_info=True)
             return e, None 
     
     @classmethod
-    def update_item(cls, order_id, user_id, item_name, item_info):
+    def update_order_item(cls, order_id, user_id, item_id, item_info):
         try:
-            item = cls._find_item(item_name)
-            order_user_item = OrderUserItemsModel.find_user_order_item(order_id, user_id, item.name)
-            if not order_user_item:
-                cls.add_item(order_id, user_id, item_name)
-            else:
-                OrderUserItemsModel.update_user_order_item(order_user_item, item_info)
-                order_user_item.save_to_db()
-            return None, order_user_item.json()
+            prev_item = OrderUserItemsModel.find_user_order_item_id(order_id, user_id, item_id)
+            updated_item = OrderUserItemsModel.update_user_order_item(prev_item, item_info)
+            updated_item.save_to_db()
+            return None, updated_item.json()
         except Exception as e:
-            logger.error("Unable to u itpdateem %s for user %s with order %s.", item_name, user_id, order_id, exc_info=True)
+            logger.error("Unable to update item %s for user %s with order %s.", item_info["id"], user_id, order_id, exc_info=True)
             return e, None 
