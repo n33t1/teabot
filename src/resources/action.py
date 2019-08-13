@@ -12,7 +12,8 @@ class Action(Resource):
         message_action = json.loads(request.form["payload"])
         user_id = message_action["user"]["id"]
         channel_id = message_action["channel"]["id"]
-
-        action_bot.handle_actions(message_action, user_id, channel_id)
+        response_url = message_action["response_url"]
+        
+        action_bot.handle_actions(message_action, user_id, channel_id, response_url)
             
         return make_response("", 200)

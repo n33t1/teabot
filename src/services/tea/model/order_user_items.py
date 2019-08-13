@@ -72,7 +72,6 @@ class OrderUserItemsModel(db.Model):
 
     @classmethod
     def find_user_order_item_details(cls, order_id, user_id, item_info):
-        print("item_info: ", item_info)
         return cls.query.filter_by(order_id=order_id).filter_by(user_id=user_id).filter_by(item_name=item_info["flavor"]).filter_by(topping=item_info["topping"]).filter_by(ice_percentage=item_info["ice"]).filter_by(sugar_percentage=item_info["sugar"]).filter_by(note=item_info["note"]).first()
     
     @classmethod

@@ -19,7 +19,6 @@ class Message:
 
     @classmethod
     def get_previous_order_message(cls, previous_order):
-        print("previous_order: ", previous_order)
         return "Previous order exist!"
 
     @classmethod
@@ -64,27 +63,55 @@ class Message:
         )
         return [menu.json()]
 
+
+# @classmethod
+    # def get_drink_details(cls, item_name, item_to_users_info, count, order_id):
+    #     result = ["*{}*".format(item_name)]
+
+    #     for (ice, sugar, topping), users_info in item_to_users_info.items():
+    #         item_count = 0
+    #         notes = []
+    #         for (uid, note, item_id, count) in users_info:
+    #             item_count += count
+    #             notes.append("<@{}>: \"{}\"\n".format(uid, note))
+    #             delete_button_value = "delete_{}_{}_{}".format(order_id, uid, item_id)
+    #         a = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping, item_count)
+            
+    #     # for (i, ((ice, sugar, topping), (uid, note, button_msg, count))) in enumerate(user_items):
+    #     #     total_count =
+    #     #     a = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping)
+    #     #     # if not note:
+    #     #     #     plain_users.append(Markdown("<@{}>".format(uid)).json())
+    #     #     # else:
+    #     #     elements = "<@{}>: \"{}\"".format(uid, note)
+    #     # # result.append(Context(plain_users).json())
+    #     # return result
+
     @classmethod
-    def get_drink_details(cls, item_name, item_to_user_info, count):
+    def get_drink_details(cls, item_name, item_to_user_info, count, order_id):
         user_items = list(item_to_user_info.items())
-        result = [Section(Markdown("*{}* ({})\n{}% ice, {}% sugar with {}".format(item_name, count, user_items[0][0][0], user_items[0][0][1], user_items[0][0][2])).json(), accessory=Accessory(str(user_items[0][1][2])).json()).json()]
-        plain_users = []
-        for (i, ((ice, sugar, topping), (uid, note, button_msg))) in enumerate(user_items):
-            if i != 0:
-                result.append(Section(Markdown(
-                    "{}% ice, {}% sugar with {}".format(ice, sugar, topping)).json(), accessory=Accessory(str(button_msg)).json()).json())
-            # if not note:
-            #     plain_users.append(Markdown("<@{}>".format(uid)).json())
-            # else:
-            elements = [Markdown("<@{}>: \"{}\"".format(uid, note)).json()]
-            result.append(Context(elements).json())
-            # user_pictures = [Image("https://api.slack.com/img/blocks/bkb_template_images/profile_1.png", "Michael Scott").json()]
-            # user_details = [Markdown("\"Thanks!\"").json()]
-        # result.append(Context(plain_users).json())
+        result = []
+        for (i, ((ice, sugar, topping), users_info)) in enumerate(user_items):
+            
+            item_count = 0
+            notes = []
+            for (uid, note, item_id, count) in users_info:
+                item_count += count
+                notes.append(Markdown("<@{}>: \"{}\"".format(uid, note)).json())
+            
+            if i == 0:
+                item_detail = "*{}* ({})\n{}% ice, {}% sugar with {} ({})".format(item_name, count, ice, sugar, topping, item_count) 
+            else:
+                item_detail = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping, item_count)
+            
+            result.append(Section(Markdown(item_detail).json(), accessory=Accessory(str(item_id)).json()).json())
+            
+
+            result.append(Context(notes).json())
         return result
 
     @classmethod
-    def get_channel_order_result(cls, order_info, items, is_user_summary=False):
+    def get_channel_order_result(cls, order_info, items, is_user_summary):
         if is_user_summary:
             result = [
                 Section(Markdown("*Here is your order summary!*").json()).json()]
@@ -95,11 +122,11 @@ class Message:
         for item in items:
             item_name_to_count[item["item_name"]] += item["count"]
             item_name_to_details[item["item_name"]][(
-                item["ice_percentage"], item["sugar_percentage"], item["topping"])] = [item["user_id"], item["note"], item["id"]]
+                item["ice_percentage"], item["sugar_percentage"], item["topping"])].append([item["user_id"], item["note"], item["id"], item["count"]])
 
-        for item_name, item_to_user_info in item_name_to_details.items():
+        for item_name, item_to_users_info in item_name_to_details.items():
             result += cls.get_drink_details(item_name,
-                                            item_to_user_info, item_name_to_count[item_name])
+                                            item_to_users_info, item_name_to_count[item_name], order_info["id"])
         return result
 
     @classmethod

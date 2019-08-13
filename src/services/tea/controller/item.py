@@ -23,7 +23,7 @@ class ItemController:
     def query_user_items(cls, order_id, user_id):
         try:
             items = OrderUserItemsModel.find_user_items(order_id, user_id)
-            return None, items
+            return None, [item.json() for item in items]
         except Exception as e:
             logger.error("Unable to query items for user %s with order %s.", user_id, order_id, exc_info=True)
             return e, None
