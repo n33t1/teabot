@@ -64,10 +64,10 @@ class OrderController:
             order = cls.find_active_order(channel_id)
             order.is_active = False
             order.is_finished = True
-            order.finished_at = datetime.utcnow
+            order.finished_at = datetime.utcnow()
             order.save_to_db()
 
-            return None, order.json()
+            return None, order
         except Exception as e:
             logger.error("Unable to finish order for channel %s.", channel_id, exc_info=True)
             return e, None

@@ -71,7 +71,13 @@ class ActionController:
             error, added_item = self._update_item(
                 channel_id, user_id, item_id, item_info, order)
 
-    def handle_view_summary(self, channel_id, user_id, order, response_url, is_user_summary=False):
+    def handle_finish_order(self, channel_id, user_id, order, response_url):
+        error, order = OrderController.finish_order(channel_id)
+        print("error, order: ", error, order)
+        self.handle_view_summary(channel_id, user_id, order, response_url, is_user_summary=False, is_finshed_summary=True)
+        # error handling here
+
+    def handle_view_summary(self, channel_id, user_id, order, response_url, is_user_summary=False, is_finshed_summary=False):
         if is_user_summary:
             error, items = ItemController.query_user_items(order.id, user_id)
             payload = {
@@ -81,13 +87,21 @@ class ActionController:
                 "attachments": Message.get_user_items_menu(order.id, user_id)}
             requests.post(response_url, json=payload)
         else:
-            items = OrderController.find_order_items(order.id)
-            payload = {
-                "response_type": "ephemeral",
-                "replace_original": True,
-                "blocks": Message.get_channel_order_result(order.json(), items, is_user_summary),
-                "attachments": Message.get_channel_configs_menu(order.id, user_id)}
-            requests.post(response_url, json=payload)
+            if is_finshed_summary:
+                items = OrderController.find_order_items(order.id)
+                payload = {
+                    "response_type": "in_channel",
+                    "delete_original": True,
+                    "blocks": Message.get_channel_order_result(order.json(), items, is_user_summary, is_finshed_summary)}
+                requests.post(response_url, json=payload)
+            else:
+                items = OrderController.find_order_items(order.id)
+                payload = {
+                    "response_type": "ephemeral",
+                    "replace_original": True,
+                    "blocks": Message.get_channel_order_result(order.json(), items, is_user_summary),
+                    "attachments": Message.get_channel_configs_menu(order.id, user_id)}
+                requests.post(response_url, json=payload)
 
     def handle_cancel_items(self, user_id, channel_id, order):
         ItemController.delete_items(order.id, user_id)
@@ -129,6 +143,8 @@ class ActionController:
                             self.handle_view_summary(channel_id, user_id, order, response_url)
                         elif action_value == "cancel":
                             self.handle_cancel_order(channel_id)
+                        elif action_value == "finish":
+                            self.handle_finish_order(channel_id, user_id, order, response_url)
                     elif action_name == "user_items":
                         if action_value == "view":
                             self.handle_view_summary(

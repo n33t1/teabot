@@ -88,7 +88,7 @@ class Message:
     #     # return result
 
     @classmethod
-    def get_drink_details(cls, item_name, item_to_user_info, count, order_id):
+    def get_drink_details(cls, item_name, item_to_user_info, count, order_id, is_user_summary):
         user_items = list(item_to_user_info.items())
         result = []
         for (i, ((ice, sugar, topping), users_info)) in enumerate(user_items):
@@ -104,19 +104,23 @@ class Message:
             else:
                 item_detail = "{}% ice, {}% sugar with {} ({})".format(ice, sugar, topping, item_count)
             
-            result.append(Section(Markdown(item_detail).json(), accessory=Accessory(str(item_id)).json()).json())
+            if is_user_summary:
+                result.append(Section(Markdown(item_detail).json(), accessory=Accessory(str(item_id)).json()).json())
+            else:
+                result.append(Section(Markdown(item_detail).json()).json())
             
-
             result.append(Context(notes).json())
         return result
 
     @classmethod
-    def get_channel_order_result(cls, order_info, items, is_user_summary):
+    def get_channel_order_result(cls, order_info, items, is_user_summary, is_finshed_summary=False):
         if is_user_summary:
-            result = [
-                Section(Markdown("*Here is your order summary!*").json()).json()]
+            result = [Section(Markdown(":rotating_light:*Ordering from {}!:rotating_light: Place your order before {}*:stopwatch::writing_hand: Started by <@{}>\n*Here is your order summary!*".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
         else:
-            result = [Section(Markdown("*Ordering from {}! Place your order before {}* Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
+            if is_finshed_summary:
+                result = [Section(Markdown("*Order from {}!* Started by <@{}>".format(order_info["from_resturant"], order_info["by_user"])).json()).json()]
+            else:
+                result = [Section(Markdown(":rotating_light:*Ordering from {}!:rotating_light: Place your order before {}*:stopwatch::writing_hand: Started by <@{}>".format(order_info["from_resturant"], order_info["timeout_at"].strftime('%H:%M'), order_info["by_user"])).json()).json()]
         item_name_to_details = defaultdict(lambda: defaultdict(list))
         item_name_to_count = defaultdict(lambda: 0)
         for item in items:
@@ -126,7 +130,7 @@ class Message:
 
         for item_name, item_to_users_info in item_name_to_details.items():
             result += cls.get_drink_details(item_name,
-                                            item_to_users_info, item_name_to_count[item_name], order_info["id"])
+                                            item_to_users_info, item_name_to_count[item_name], order_info["id"], is_user_summary)
         return result
 
     @classmethod
